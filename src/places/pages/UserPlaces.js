@@ -18,14 +18,14 @@ const DUMMY_PLACES = [
     },
     {
         id: "p2",
-        title: "Emp. State Building",
-        description: "One of the most famous sky scrapers in the world!",
+        title: "Eiffel Tower",
+        description: "A wrought-iron lattice tower on the Champ de Mars in Paris, France.",
         imageUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/c/c7/Empire_State_Building_from_the_Top_of_the_Rock.jpg",
-        address: "20 W 34th St, New York, NY 10118",
+        "https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg",
+        address: "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
         location: {
-        lat: 40.7484405,
-        lng: -73.9878531
+        lat: 48.8583701,
+        lng: 2.2922926
         },
         creator: "u2"
     } 

@@ -22,7 +22,7 @@ const App = () => {
   let routes; // declare routes
   if (isLoggedIn) { // if isLoggedIn is true then set the routes
     routes = (
-      <Switch>
+      <Switch> {/* Switch is used to render the first child Route or Redirect that matches the location */}
         <Route path="/" exact>
           <h1>Home</h1>
         </Route>
@@ -53,7 +53,7 @@ const App = () => {
       <Route path="/auth" exact> {/* Add this route exctly while typing auth */}
           <Auth />
       </Route>
-      <Redirect to="/" /> {/* Redirect to home page for invalid paths */}
+      <Redirect to="/auth" /> {/* Redirect to auth page for invalid paths */}
     </Switch>
     );
   } // if isLoggedIn is true then display the routes for logged in users else display the routes for logged out users
