@@ -1,5 +1,6 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../../shared/context/auth-context";
 import Card from "../../shared/components/UIElements/Card";
 import Button from "../../shared/components/FormElements/Button";
 import Modal from "../../shared/components/UIElements/Modal";
@@ -9,6 +10,7 @@ import './PlaceItem.css';
 const PlaceItem = ({id, image, title, description, address, creatorId, coordinates}) => {   
     const [showMap, setShowMap] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const auth = useContext(AuthContext);   // useContext is used to get the value of AuthContext
     const showDeleteHandlerWaring = () => {
         setShowConfirmModal(true);
     }
@@ -50,8 +52,8 @@ const PlaceItem = ({id, image, title, description, address, creatorId, coordinat
                     </div>
                     <div className="place-item__actions">
                         <Button inverse onClick={()=>setShowMap(true)}>View on Map</Button> {/*goto modal component while clicking */}
-                        <Button to={`/places/${id}`}>Edit</Button>
-                        <Button danger onClick={showDeleteHandlerWaring}>Delete</Button>
+                        {auth.isLoggedIn && <Button to={`/places/${id}`}>Edit</Button>}
+                        {auth.isLoggedIn && <Button danger onClick={showDeleteHandlerWaring}>Delete</Button>}
                     </div>
                 </Card>
             </li>
