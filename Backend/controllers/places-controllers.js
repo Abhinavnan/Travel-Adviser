@@ -1,5 +1,8 @@
 const { v4: uuid } = require('uuid'); //import uuid to generate unique ids
+const { validationResult } = require('express-validator'); //import express-validator to validate the request
 const HttpError = require('../models/http-error');
+const getCoordsForAddress = require('../util/location'); //import the getCoordsForAddress function to get the coordinates for the address
+
 
 let DUMMY_PLACES = [
     {
@@ -64,15 +67,29 @@ const getPlacesByUserId = (req, res, next) => {
     res.json({places}); // send the place details as a response in json format
 }; //get request for place by user id
 
-const createPlace = (req, res, next) => {
-    const { id, title, description, imageUrl, location, address, creator } = req.body; 
+const createPlace = async (req, res, next) => {
+    const errors = validationResult(req); //validate the request
+    if (!errors.isEmpty()) {
+        console.log(errors);
+        return next(new HttpError('Invalid inputs passed, please check your data.', 422)); //if validation fails, throw an error
+    } //if validation fails, throw an error
+
+    const { id, title, description, imageUrl, address, creator } = req.body; 
     //get the title, description, coordinates, address and creator from the request body
+
+    let coordinates ; //get the coordinates for the address
+    try {
+        coordinates = await getCoordsForAddress(address); //get the coordinates for the address
+    }catch(error){
+        return next(error); //if error occurs, return the error
+    }
+
     const createdPlace = {
         id: id || uuid(),
         title,
         description,
         imageUrl,
-        location,
+        location: coordinates,
         address,
         creator
     }; //create a new place object
@@ -81,6 +98,11 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
+    const errors = validationResult(req); //validate the request
+    if (!errors.isEmpty()) {
+        throw new HttpError('Invalid inputs passed, please check your data.', 422); //if validation fails, throw an error
+    } //if validation fails, throw an error
+    
     const {title, description}  = req.body; //get the title and description from the request body
     const placeId = req.params.pid; //get the place id
     const updatePlace = {...DUMMY_PLACES.find(p => p.id === placeId)}; //make copy of DUMMY_PLACES with the given id
@@ -94,6 +116,9 @@ const updatePlace = (req, res, next) => {
 const deletePlace = (req, res, next) => {
     const placeId = req.params.pid; //get the place id
     console.log('DELETE request in places route');
+    if (!DUMMY_PLACES.find(p => p.id === placeId)) {
+        throw new HttpError('Could not find a place for that id.', 404); //if place is not found, throw an error
+    } //if place is not found, throw a 404 error
     DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId); //filter out the place with the given id
     res.status(200).json({message: 'Deleted place.' }); //send a response
 }
