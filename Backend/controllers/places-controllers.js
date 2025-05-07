@@ -1,47 +1,9 @@
-const { v4: uuid } = require('uuid'); //import uuid to generate unique ids
 const { validationResult } = require('express-validator'); //import express-validator to validate the request
+const mongoose = require('mongoose'); //import mongoose to connect to the database
 const HttpError = require('../models/http-error');
 const getCoordsForAddress = require('../util/location'); //import the getCoordsForAddress function to get the coordinates for the address
-const Place = require('../models/place'); //import the Place model to use it in the database
-
-let DUMMY_PLACES = [
-    {
-        id: 'p1',
-        title: 'Empire State Building',
-        description: 'One of the most famous sky scrapers in the world!',
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/10/Empire_State_Building_%28aerial_view%29.jpg',
-        address: '20 W 34th St, New York, NY 10118, United States',
-        location: {
-            lat: 40.7484405,
-            lng: -73.9878531
-        },
-        creator: 'u1'
-    },
-    {
-        id: 'p2',
-        title: 'Eiffel Tower',
-        description: 'A wrought-iron lattice tower on the Champ de Mars in Paris, France.',
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg',
-        address: 'Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France',
-        location: {
-            lat: 48.8583701,
-            lng: 2.2922926
-        },
-        creator: 'u2'
-    },
-    {
-        "id": "p3",
-        "title": "Sydney Opera House",
-        "description": "A multi-venue performing arts center in Sydney, Australia.",
-        "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/41/Sydney_Opera_House_-_Dec_2008.jpg",
-        "address": "Bennelong Point, Sydney NSW 2000, Australia",
-        "location": {
-            "lat": -33.8567844,
-            "lng": 151.2152967
-        },
-        "creator": "u1"
-    },
-];
+const Place = require('../models/place'); //import the Place model to use it in the databasecon
+const User = require('../models/users');
 
 const getPlaceById = async  (req, res, next) => {
     const placeId = req.params.pid; //get the place id
@@ -66,7 +28,9 @@ const getPlacesByUserId = async (req, res, next) => {
     const userId = req.params.uid; //get the user id
     let places;
     try {
-        places = await Place.find({creator: userId}); //find the places with the given user id
+        //places = await Place.find({creator: userId}); //find the places with the given user id
+        const user = await User.findById(userId).populate('places');
+        places = user.places;
     }catch(err) {
         const error = new HttpError('Something went wrong, could not find a place.', 500); //if error occurs, throw an error
         return next(error); //return the error
@@ -75,7 +39,7 @@ const getPlacesByUserId = async (req, res, next) => {
     if (!places || places.length === 0) {
         return next(new HttpError('Could not find a place for the provided user id.', 404)); //if place is not found, return
     } //if place is not found, return
-    res.json({places: places.map((place) => place.toObject({getters: true}))}); // send the place details as a response in json format
+    res.json({places: places.map(place => place.toObject({getters: true}))}); // send the place details as a response in json format
                                                         // cannot use toOject() directly, because find() returns an array of objects
 }; //get request for place by user id
 
@@ -86,7 +50,7 @@ const createPlace = async (req, res, next) => {
         return next(new HttpError('Invalid inputs passed, please check your data.', 422)); //if validation fails, throw an error
     } //if validation fails, throw an error
 
-    const { title, description, imageUrl, address, creator } = req.body; 
+    const { title, description, image, address, creator } = req.body; 
     //get the title, description, coordinates, address and creator from the request body
 
     let coordinates ; //get the coordinates for the address
@@ -96,16 +60,36 @@ const createPlace = async (req, res, next) => {
         return next(error); //if error occurs, return the error
     }
 
+    let user; 
+    try {
+        user = await User.findById(creator); //find the user with the given id
+    }catch(err) {
+        const error = new HttpError('Creating place failed, please try again.', 500); 
+        return next(error); 
+    } 
+
+    if (!user) {
+        const error = new HttpError('Could not find user for provided id.', 404);
+        return next(error); 
+    } 
+
     const createdPlace = new Place({ //create a new place object
         title,
         description,
-        image: imageUrl,
+        image,
         address,
         location: coordinates, //set the coordinates
         creator //set the creator
     }); //create a new place object
     try {
-        await createdPlace.save(); //save the place to the database
+        const session = await mongoose.startSession(); //start a session to save the place and user in the database
+        session.startTransaction();
+        await createdPlace.save({session: session});
+        user.places.push(createdPlace);
+        await user.save({session: session});
+        await session.commitTransaction();
+        // isolate the session to save the place and user in the database
+        // if any error occurs, the transaction will be rolled back and the data will not be saved to the database
     }catch(err) {
         const error = new HttpError('Creating place failed, please try again.', 500); //if error occurs, throw an error
         return next(error); //return the error for async function
@@ -148,7 +132,7 @@ const deletePlace = async (req, res, next) => {
     console.log('DELETE request in places route');
     let place; //create a place variable
     try {
-        place = await Place.findById(placeId); //find the place with the given id
+        place = await Place.findById(placeId).populate('creator'); //find the place with the given id with the creator details
     }catch(err) {
         const error = new HttpError('Something went wrong, could not find a place.', 500); //if error occurs, throw an error
         return next(error); //return the error
@@ -156,9 +140,18 @@ const deletePlace = async (req, res, next) => {
     let title; 
     if(place){
         title = place.title; //get the title of the place
-    }
+    }else{
+        const error = new HttpError('Could not find a place.', 404);
+        return next(error); 
+    } 
+    
     try {
-        await place.deleteOne(); //delete the place to the database
+        const session = await mongoose.startSession(); 
+        session.startTransaction(); 
+        await place.deleteOne({session: session}); 
+        place.creator.places.pull(place); // remove place from the user
+        await place.creator.save({session: session}); // update user database
+        await session.commitTransaction(); 
     }catch(err) {
         const error = new HttpError('Deleting place failed, please try again.', 500); //if error occurs, throw an error
         return next(error); //return the error for async function

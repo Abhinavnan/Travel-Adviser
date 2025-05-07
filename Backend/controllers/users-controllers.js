@@ -1,25 +1,17 @@
-const { v4: uuid } = require('uuid'); //import the uuid package
 const { validationResult } = require('express-validator'); //import the express-validator package
 const httpError = require('../models/http-error');
 const User = require('../models/users'); //import the User model to use it in the database
 
-let DUMMY_USERS = [
-    {
-        id: 'u1',
-        name: 'Max Schwarz',
-        email: 'max.schwarz@example.com',
-        password: 'test123'
-    },
-    {
-        id: 'u2',
-        name: 'Manu',
-        email: 'manu@example.com',
-        password: 'test456'
-    }   
-];
 
-const  getUsers = (req, res, next) => {
-    res.json({users: DUMMY_USERS}); //send the Users array as a response
+const  getUsers = async (req, res, next) => {
+    let users; 
+    try {
+        users = await User.find({}, '-password'); //find all the users in the database and exclude the password field
+    }catch(err) {
+        const error = new httpError('Fetching users failed, please try again later.', 500);
+        return next(error); 
+    } 
+    res.json({users: users.map(user => user.toObject({getters: true}))}); 
 }
 
 const login = async (req, res, next) => { 
@@ -51,7 +43,7 @@ const signup = async (req, res, next) => {
         console.log(errors);
         return next(new httpError('Invalid inputs passed, please check your data.', 422)); //if validation fails, return
     } //if validation fails, return a 422 error
-    const {name, email, password, image, places} = req.body; //get the name, email and password from the request body
+    const {name, email, password, image} = req.body; //get the name, email and password from the request body
     let existingUser; 
     try {
         existingUser = await User.findOne({email: email}); //find the User with the given email
@@ -70,7 +62,7 @@ const signup = async (req, res, next) => {
         email,
         image,
         password,
-        places
+        places: []
     }); //create a new User object
 
     try {

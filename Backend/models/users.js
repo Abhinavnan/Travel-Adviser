@@ -7,7 +7,7 @@ const userSchema = new Schema({ //create a schema for the place
     email: { type: String, required: true, unique: true}, 
     image: { type: String, required: true }, 
     password: { type: String, required: true, minlength: 6 }, 
-    places: { type: String, required: true} 
+    places: [{ type: mongoose.Types.ObjectId, required: true, ref: 'Place' }] //reference to the places created by the user
 });
 // unique: true will index email field and make it faster to query
 
