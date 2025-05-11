@@ -11,12 +11,15 @@ import { AuthContext } from './shared/context/auth-context';
 
 const App = () => { 
   const [isLoggedIn, setIsLoggedIn] = useState(false); // set the default value of isLoggedIn as false
-  const login = useCallback(() => { 
+  const [userId, setUserId] = useState(null); // set the default value of userId as null
+  const login = useCallback((uid) => { 
     setIsLoggedIn(true); 
+    setUserId(uid); // set the userId to u1
   }
   , []); // useCallback is used to prevent the function from being recreated on every render cycle  
   const logout = useCallback(() => { 
     setIsLoggedIn(false); 
+    setUserId(null); 
   }
   , []); 
   let routes; // declare routes
@@ -60,7 +63,7 @@ const App = () => {
 
   
   return (
-    <AuthContext.Provider value={{isLoggedIn: isLoggedIn, login: login, logout: logout}}> 
+    <AuthContext.Provider value={{isLoggedIn: isLoggedIn, login: login, logout: logout, userId: userId}}>     
     {/* pass the value of isLoggedIn, login and logout to the components */}
       <Router>
         <MainNavigation />

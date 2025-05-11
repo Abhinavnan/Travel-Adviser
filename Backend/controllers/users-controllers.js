@@ -33,8 +33,7 @@ const login = async (req, res, next) => {
         const error = new httpError('Could not log you in, Invalid password', 401); 
         return next(error); 
     } //if password is not correct, return a 401 error
-    const name = existingUser.name; //get the name of the User
-    res.json({message: 'Logged in!' , name}); //send a response
+    res.json({message: 'Logged in!' , User: existingUser.toObject({getters: true})}); //send a response
 }
 
 const signup = async (req, res, next) => {
@@ -43,7 +42,7 @@ const signup = async (req, res, next) => {
         console.log(errors);
         return next(new httpError('Invalid inputs passed, please check your data.', 422)); //if validation fails, return
     } //if validation fails, return a 422 error
-    const {name, email, password, image} = req.body; //get the name, email and password from the request body
+    const {name, email, password,} = req.body; //get the name, email and password from the request body
     let existingUser; 
     try {
         existingUser = await User.findOne({email: email}); //find the User with the given email
@@ -60,7 +59,7 @@ const signup = async (req, res, next) => {
     const createdUser = new User({ //create a new User object
         name,
         email,
-        image,
+        image: 'https://www.w3schools.com/howto/img_avatar.png',
         password,
         places: []
     }); //create a new User object

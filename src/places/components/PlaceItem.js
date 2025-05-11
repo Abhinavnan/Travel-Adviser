@@ -1,29 +1,39 @@
-import React from "react";
-import { useState, useContext } from "react";
+import React,{ useState, useContext } from "react";
 import { AuthContext } from "../../shared/context/auth-context";
+import { useHttpClient } from "../../shared/hooks/http-hook";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import Card from "../../shared/components/UIElements/Card";
 import Button from "../../shared/components/FormElements/Button";
 import Modal from "../../shared/components/UIElements/Modal";
 import Map from "../../shared/components/UIElements/Map";
 import './PlaceItem.css';
 
-const PlaceItem = ({id, image, title, description, address, creatorId, coordinates}) => {   
+const PlaceItem = ({id, image, title, description, address, creatorId, coordinates, onDelete}) => { 
     const [showMap, setShowMap] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const auth = useContext(AuthContext);   // useContext is used to get the value of AuthContext
+    const { isLoading, error, sendRequest, clearError  } = useHttpClient(); // useHttpClient is used to make API calls
     const showDeleteHandlerWaring = () => {
         setShowConfirmModal(true);
     }
     const cancelDeleteHandler = () => {
         setShowConfirmModal(false);
     }
-    const confirmDeleteHandler = () => {
-        console.log("DELETING...");
+    const confirmDeleteHandler = async () => {
         setShowConfirmModal(false);
+        try {
+            await sendRequest('delete', `http://localhost:5000/api/places/${id}`);
+            onDelete(id); // Call the onDelete function passed from parent component
+        }catch(err) {
+            console.log(err);
+        }
     }
 
     return (
         <React.Fragment>
+            <ErrorModal error={error} onClear={clearError} />
+            {isLoading && <LoadingSpinner asOverlay />}
             <Modal show={showMap} onCancel={() => setShowMap(false)} header={address} 
             contentClass="place-item__modal-content" footerClass="place-item__modal-actions" 
             footer={<Button onClick={() => setShowMap(false)}>CLOSE</Button>}>
@@ -52,8 +62,8 @@ const PlaceItem = ({id, image, title, description, address, creatorId, coordinat
                     </div>
                     <div className="place-item__actions">
                         <Button inverse onClick={()=>setShowMap(true)}>View on Map</Button> {/*goto modal component while clicking */}
-                        {auth.isLoggedIn && <Button to={`/places/${id}`}>Edit</Button>}
-                        {auth.isLoggedIn && <Button danger onClick={showDeleteHandlerWaring}>Delete</Button>}
+                        {auth.userId === creatorId && <Button to={`/places/${id}`}>Edit</Button>}
+                        {auth.userId === creatorId && <Button danger onClick={showDeleteHandlerWaring}>Delete</Button>}
                     </div>
                 </Card>
             </li>

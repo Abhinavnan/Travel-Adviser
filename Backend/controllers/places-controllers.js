@@ -50,7 +50,7 @@ const createPlace = async (req, res, next) => {
         return next(new HttpError('Invalid inputs passed, please check your data.', 422)); //if validation fails, throw an error
     } //if validation fails, throw an error
 
-    const { title, description, image, address, creator } = req.body; 
+    const { title, description, address, creator } = req.body; 
     //get the title, description, coordinates, address and creator from the request body
 
     let coordinates ; //get the coordinates for the address
@@ -76,7 +76,7 @@ const createPlace = async (req, res, next) => {
     const createdPlace = new Place({ //create a new place object
         title,
         description,
-        image,
+        image: 'https://hips.hearstapps.com/hmg-prod/images/the-dolomites-itlay-veranda-most-beautiful-places-in-europe-66a1720c719dd.jpg',
         address,
         location: coordinates, //set the coordinates
         creator //set the creator

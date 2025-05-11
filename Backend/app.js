@@ -1,14 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose'); //import mongoose to connect to the database
+const cors = require('cors'); //import cors to enable cross-origin resource sharing
 const placesRoutes = require('./routes/places-route');
 const usersRoutes = require('./routes/users-route');
 const HttpError = require('./models/http-error');
 
 const app = express(); //create an express object
-const url = 'mongodb+srv://lamboavancher7:WIrDKbv6pKK7kNRx@mustilago.ig2fpjn.mongodb.net/Places?retryWrites=true&w=majority&appName=Mustilago';
+const url = 'mongodb+srv://lamboavancher7:WIrDKbv6pKK7kNRx@mustilago.ig2fpjn.mongodb.net/TravelAdvisor?retryWrites=true&w=majority&appName=Mustilago';
 
 app.use(bodyParser.json()); //use the body parser middleware
+app.use(cors()); 
 app.use('/api/places', placesRoutes); //use the placesRoutes
 app.use('/api/users', usersRoutes); //use the usersRoutes
 

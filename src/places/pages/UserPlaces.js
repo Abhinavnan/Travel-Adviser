@@ -1,40 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useHttpClient } from "../../shared/hooks/http-hook";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import PlaceList from "../components/PlaceList";
-
-const DUMMY_PLACES = [
-    {
-        id: "p1",
-        title: "Empire State Building",
-        description: "One of the most famous sky scrapers in the world!",
-        imageUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/c/c7/Empire_State_Building_from_the_Top_of_the_Rock.jpg",
-        address: "20 W 34th St, New York, NY 10118",
-        location: {
-        lat: 40.7484405,
-        lng: -73.9878531
-        },
-        creator: "u1"
-    },
-    {
-        id: "p2",
-        title: "Eiffel Tower",
-        description: "A wrought-iron lattice tower on the Champ de Mars in Paris, France.",
-        imageUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg",
-        address: "Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France",
-        location: {
-        lat: 48.8583701,
-        lng: 2.2922926
-        },
-        creator: "u2"
-    } 
-];    // Dummy data
 
 const UserPlaces = () => {
     const userId = useParams().userId;  // Get the userId from the URL
-    const loadedPlaces = DUMMY_PLACES.filter(place => place.creator === userId); // Filter the places by creator
-    return (<PlaceList items={loadedPlaces} />);
+    const [places, setPlaces] = useState([]); // State to store the places of the user
+    const { isLoading, error, sendRequest, clearError  } = useHttpClient(); // useHttpClient is used to make API calls
+    useEffect(() => {
+        const fetchPlaces = async () => {
+            try {
+                const response = await sendRequest('get', `http://localhost:5000/api/places/user/${userId}`); // Fetch the places of the user                
+                setPlaces(response.places); // Set the places in the state
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        fetchPlaces();
+    },[sendRequest, userId]); // Fetch the places when the component mounts or when userId changes
+
+    const placeDeletedHandler = (deletedPlaceId) => {
+        setPlaces((prevPlaces) => prevPlaces.filter((place) => place.id !== deletedPlaceId)); // Filter out the deleted place from the state
+    }
+
+    return (
+        <>
+            <ErrorModal error={error} onClear={clearError} />
+            {isLoading && <LoadingSpinner asOverlay />}
+            <PlaceList items={places} onDelete={placeDeletedHandler} />
+        </>
+    );
 };
 
 export default UserPlaces;
