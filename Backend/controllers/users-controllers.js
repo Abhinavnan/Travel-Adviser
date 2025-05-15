@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator'); //import the express-validator package
+const path = require('path'); //import path to use it in the file upload
 const httpError = require('../models/http-error');
 const User = require('../models/users'); //import the User model to use it in the database
 
@@ -55,11 +56,15 @@ const signup = async (req, res, next) => {
         const error = new httpError('User exists already, please login instead.', 422); //if User is found, return a 422 error
         return next(error); //return the error
     } //if User is found, return a 422 error
-
+    const normalizedPath = path.normalize(req.file.path);
+    // On Windows, the filesystem uses backslashes (\) by default
+    // but we want to use forward slashes (/) in our URLs
+    // so we need to normalize the path to use forward slashes
+    // req.file.path is the path to the file uploaded by multer middleware
     const createdUser = new User({ //create a new User object
         name,
         email,
-        image: 'https://www.w3schools.com/howto/img_avatar.png',
+        image: normalizedPath, 
         password,
         places: []
     }); //create a new User object

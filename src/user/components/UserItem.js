@@ -4,12 +4,13 @@ import "./UserItem.css";
 import Card from "../../shared/components/UIElements/Card";
 import Avather from "../../shared/components/UIElements/Avatar";
 const UserItem = ({id, name, image, placesCount}) => {
+    const baseUrl = 'http://localhost:5000/'; // Base URL for the API
     return (
         <li className="user-item">
             <Card className="user-item__content">
                 <Link to={`/${id}/places`}> {/* Add this link to the UserPlaces page*/}
                     <div className="user-item__image">
-                        <Avather image={image} alt={name} />
+                        <Avather image={baseUrl+image} alt={name} />
                     </div>
                     <div className="user-item__info">
                         <h2>{name}</h2>

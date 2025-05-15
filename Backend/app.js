@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose'); //import mongoose to connect to the database
 const cors = require('cors'); //import cors to enable cross-origin resource sharing
+const fs = require('fs'); //import fs to use the file system
 const placesRoutes = require('./routes/places-route');
 const usersRoutes = require('./routes/users-route');
 const HttpError = require('./models/http-error');
@@ -11,6 +12,9 @@ const url = 'mongodb+srv://lamboavancher7:WIrDKbv6pKK7kNRx@mustilago.ig2fpjn.mon
 
 app.use(bodyParser.json()); //use the body parser middleware
 app.use(cors()); 
+app.use('/Uploads/Images', express.static('Uploads/Images')); 
+//use the static middleware to serve the images from the uploads/images folder
+
 app.use('/api/places', placesRoutes); //use the placesRoutes
 app.use('/api/users', usersRoutes); //use the usersRoutes
 
@@ -20,6 +24,11 @@ app.use((req, res, next) => {
 }); //middleware for handling unknown routes
 
 app.use((error, req, res, next) => {
+    if (req.file) { 
+        fs.unlink(req.file.path, err => { 
+            console.log(err); 
+        });
+    } //if there is an error while saving data to the database, delete the file also
     if (res.headerSent) {
         return next(error);
     } //if response header is already sent, return the error

@@ -8,6 +8,7 @@ import Button from "../../shared/components/FormElements/Button";
 import Card from "../../shared/components/UIElements/Card";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import "./Auth.css";
 
 const Auth = () => {
@@ -31,8 +32,7 @@ const Auth = () => {
         event.preventDefault();
         const userData = {
             email: formState.inputs.email.value,
-            password: formState.inputs.password.value,
-            name: isLoginMode ? '' : formState.inputs.name.value 
+            password: formState.inputs.password.value, 
         };
         if(isLoginMode) {
             delete userData.name; // Delete the name field from userData object
@@ -44,7 +44,12 @@ const Auth = () => {
             } 
         }else {
             try {
-                const response = await sendRequest('post', 'http://localhost:5000/api/users/signup', userData); 
+                const formData = new FormData(); // Create a new FormData object
+                formData.append('name', formState.inputs.name.value); // Append the name field to the FormData object
+                formData.append('email', formState.inputs.email.value); 
+                formData.append('password', formState.inputs.password.value);
+                formData.append('image', formState.inputs.image.value); // Append the image field to the FormData object
+                const response = await sendRequest('post', 'http://localhost:5000/api/users/signup', formData); 
                 auth.login(response.User.id); // Call the login function from auth-context.js
             }catch(err) { 
                 console.log(err);
@@ -57,7 +62,8 @@ const Auth = () => {
             setFormData(
                 {
                     ...formState.inputs,
-                    name: undefined
+                    name: undefined,
+                    image: undefined
                 },
                 formState.inputs.email.isValid && formState.inputs.password.isValid
                 // validate Signup form if email and password is valid then switch to login
@@ -69,8 +75,12 @@ const Auth = () => {
                     name: {
                         value: "",
                         isValid: false
-                    }
+                    },
                     // input name field in formState
+                    image: {
+                        value: null,
+                        isValid: false
+                    }
                 },
                 false
             );     
@@ -92,6 +102,7 @@ const Auth = () => {
                 errorText={"Please type valid name"} onInput={inputHandler}/> }
                 {/* If isLoginMode is false then show the name input field */}
                 {/* inputHandler function send the input value to formState for validation */}
+                { !isLoginMode && <ImageUpload center id="image" onInput={inputHandler} /> }
                 <form className="authentication__header" onSubmit={authSubmitHandler}>               
                     <Input id="email" element="input" type="email" label="Email" validators={[VALIDATOR_EMAIL()]} 
                     errorText={"Please type valid email"}  onInput={inputHandler}/>

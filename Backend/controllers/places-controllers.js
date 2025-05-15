@@ -1,5 +1,7 @@
 const { validationResult } = require('express-validator'); //import express-validator to validate the request
 const mongoose = require('mongoose'); //import mongoose to connect to the database
+const path = require('path'); //import path to use it in the file upload
+const fs = require('fs'); //import fs to use the file system
 const HttpError = require('../models/http-error');
 const getCoordsForAddress = require('../util/location'); //import the getCoordsForAddress function to get the coordinates for the address
 const Place = require('../models/place'); //import the Place model to use it in the databasecon
@@ -71,12 +73,15 @@ const createPlace = async (req, res, next) => {
     if (!user) {
         const error = new HttpError('Could not find user for provided id.', 404);
         return next(error); 
-    } 
-
+    }    
+    const normalizedPath = path.normalize(req.file.path); //normalize the path to use forward slashes
+    // On Windows, the filesystem uses backslashes (\) by default
+    // but we want to use forward slashes (/) in our URLs
+    // req.file.path is the path to the file uploaded by multer middleware
     const createdPlace = new Place({ //create a new place object
         title,
         description,
-        image: 'https://hips.hearstapps.com/hmg-prod/images/the-dolomites-itlay-veranda-most-beautiful-places-in-europe-66a1720c719dd.jpg',
+        image: normalizedPath,
         address,
         location: coordinates, //set the coordinates
         creator //set the creator
@@ -144,7 +149,8 @@ const deletePlace = async (req, res, next) => {
         const error = new HttpError('Could not find a place.', 404);
         return next(error); 
     } 
-    
+
+    const imagePath = place.image; //get the image path of the place
     try {
         const session = await mongoose.startSession(); 
         session.startTransaction(); 
@@ -156,6 +162,9 @@ const deletePlace = async (req, res, next) => {
         const error = new HttpError('Deleting place failed, please try again.', 500); //if error occurs, throw an error
         return next(error); //return the error for async function
     } //if error occurs, throw an error
+    fs.unlink(imagePath, err => { 
+        console.log(err); 
+    }); //delete the image from the server
 
     res.status(200).json({message: 'Deleted place.', title}); //send a response
 }

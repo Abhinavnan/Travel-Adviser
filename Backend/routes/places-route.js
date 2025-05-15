@@ -2,6 +2,7 @@ const express = require('express');
 const route = express.Router(); //create a route object
 const { check } = require('express-validator'); //import the express-validator
 const placesControllers = require('../controllers/places-controllers'); //import the places controller
+const fileUpload = require('../middleware/file-upload'); //import the file upload middleware
 
 const createValidator = [
     check('title').not().isEmpty(),
@@ -17,7 +18,7 @@ route.get('/:pid', placesControllers.getPlaceById); //get request for place by i
 
 route.get('/user/:uid', placesControllers.getPlacesByUserId ); //get request for place by user id
 
-route.post('/', createValidator, placesControllers.createPlace); //post request for creating a place
+route.post('/',fileUpload.single('image'), createValidator, placesControllers.createPlace); //post request for creating a place
 
 route.patch('/:pid', updateValidator, placesControllers.updatePlace); //patch request for updating a place
 

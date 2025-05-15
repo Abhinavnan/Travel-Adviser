@@ -8,6 +8,7 @@ import Input from "../../shared/components/FormElements/Input";
 import Button from "../../shared/components/FormElements/Button";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal"; 
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import "./Placeform.css";
 
 const NewPlace = () => {
@@ -27,26 +28,33 @@ const NewPlace = () => {
       address: {
         value: "",
         isValid: false
+      },
+      image: {
+        value: null,
+        isValid: false
       }
     },
     false
   ); // Call the useForm custom hook
   const placeSubmitHandler =async event => {
     event.preventDefault();
-    const placeData = {
-      title: formState.inputs.title.value,
-      description: formState.inputs.description.value,
-      address: formState.inputs.address.value,
-      creator: auth.userId
-    };
+    if(!formState.isValid){
+      return; // If formState is not valid then return, to prevent form submission while clicking ImageUpload button
+    }
+    const formData = new FormData(); // Create a new FormData object
+    formData.append('title', formState.inputs.title.value); // Append the title field to the FormData object
+    formData.append('description', formState.inputs.description.value); 
+    formData.append('address', formState.inputs.address.value); 
+    formData.append('image', formState.inputs.image.value); // Append the image field to the FormData object
+    formData.append('creator', auth.userId); 
     try {
-      await sendRequest('post', 'http://localhost:5000/api/places', placeData);
+      await sendRequest('post', 'http://localhost:5000/api/places', formData);
       history.push(`/${auth.userId}/places`); // Navigate to home page after adding place
     }catch(err) {
       console.log(err);
     }
   }
-
+  
   return (
     <>
       <ErrorModal error={error} onClear={clearError} />
@@ -55,6 +63,8 @@ const NewPlace = () => {
         <Input id="title" element="input" type="text" label="Title" validators={[VALIDATOR_REQUIRE()]} 
         errorText={"Please type valid title"}  onInput={inputHandler}/>
         {/* VALIDATOR_REQUIRE function is properties of validation */}
+        <ImageUpload id="image" center onInput={inputHandler} style={{width: '20rem'}} />
+        {/* ImageUpload is a custom component */}
         <Input id="description" element="textarea" label="Description" validators={[VALIDATOR_MINLENGTH(5)]} 
         errorText={"Please type valid description"}  onInput={inputHandler}/>
         {/* VALIDATOR_MINLENGTH function is properties of validation */}

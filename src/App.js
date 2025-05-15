@@ -27,7 +27,7 @@ const App = () => {
     routes = (
       <Switch> {/* Switch is used to render the first child Route or Redirect that matches the location */}
         <Route path="/" exact>
-          <h1>Home</h1>
+          <Users />
         </Route>
         <Route path="/:userId/places" exact> {/* Add this route exctly while typing :userId/places */}
           <UserPlaces />
