@@ -5,8 +5,9 @@ import Card from "../../shared/components/UIElements/Card";
 import Avather from "../../shared/components/UIElements/Avatar";
 const UserItem = ({id, name, image, placesCount}) => {
     const baseUrl = process.env.REACT_APP_BACKEND_URL;; // Base URL for the API
+    const samleProfileImage = 'https://img.freepik.com/premium-vector/user-profile-icon-vector-1_666870-1779.jpg';
     //const imageUrl = baseUrl + image;  // for local image
-    const imageUrl = image // for S3 bucket
+    const imageUrl = image.includes('amazonaws.com') ? image :  samleProfileImage;// for S3 bucket
     return (
         <li className="user-item">
             <Card className="user-item__content">
