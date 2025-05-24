@@ -6,6 +6,7 @@ import Avather from "../../shared/components/UIElements/Avatar";
 const UserItem = ({id, name, image, placesCount}) => {
     const baseUrl = process.env.REACT_APP_BACKEND_URL;; // Base URL for the API
     const samleProfileImage = 'https://img.freepik.com/premium-vector/user-profile-icon-vector-1_666870-1779.jpg';
+    // uses in S3 url not existes
     //const imageUrl = baseUrl + image;  // for local image
     const imageUrl = image.includes('amazonaws.com') ? image :  samleProfileImage;// for S3 bucket
     return (
