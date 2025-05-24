@@ -11,6 +11,8 @@ import './PlaceItem.css';
 
 const PlaceItem = ({id, image, title, description, address, creatorId, coordinates, onDelete}) => { 
     const baseUrl = process.env.REACT_APP_BACKEND_URL;  
+    //const imageUrl = baseUrl + image;  // for local image
+    const imageUrl = image // for S3 bucket
     const [showMap, setShowMap] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const auth = useContext(AuthContext);   // useContext is used to get the value of AuthContext
@@ -54,7 +56,7 @@ const PlaceItem = ({id, image, title, description, address, creatorId, coordinat
             <li className="place-item">
                 <Card className="place-item__content">
                     <div className="place-item__image">
-                        <img src={baseUrl+image} alt={title} /> 
+                        <img src={imageUrl} alt={title} /> 
                     </div>
                     <div className="place-item__info">
                         <h2>{title}</h2>
