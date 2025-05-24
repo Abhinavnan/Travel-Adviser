@@ -20,6 +20,7 @@
 *.env.production.local
 *.env
 *.env*
+*.zip
 
 *npm-debug.log*
 *yarn-debug.log*
